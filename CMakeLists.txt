@@ -16,6 +16,7 @@ find_package(CURL REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 include_directories(
+    ${CMAKE_SOURCE_DIR}/include
     ${OPENGL_INCLUDE_DIRS}
     ${GLFW3_INCLUDE_DIRS}
     ${CURL_INCLUDE_DIRS}
@@ -36,9 +37,9 @@ set(IMGUI_SOURCES
 )
 
 add_executable(${PROJECT_NAME}
-    main.cpp
-    auth_handler.cpp
-    http_client.cpp
+    src/main.cpp
+    src/auth_handler.cpp
+    src/http_client.cpp
     ${IMGUI_SOURCES}
 )
 
