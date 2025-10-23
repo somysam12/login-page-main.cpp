@@ -1,28 +1,21 @@
 const form = document.getElementById('loginForm');
-const loginBtn = document.getElementById('loginBtn');
-const btnText = document.getElementById('btnText');
-const messageBox = document.getElementById('messageBox');
-const usernameInput = document.getElementById('username');
+const verifyBtn = document.querySelector('.verify-btn');
+const statusMessage = document.getElementById('statusMessage');
 const licenseKeyInput = document.getElementById('licenseKey');
+const rememberKeyCheckbox = document.getElementById('rememberKey');
 
-function showMessage(message, type = 'info') {
-    messageBox.textContent = message;
-    messageBox.className = `message-box show ${type}`;
-    
-    setTimeout(() => {
-        messageBox.classList.remove('show');
-    }, 5000);
+function showStatus(message, type = 'error') {
+    statusMessage.textContent = message;
+    statusMessage.className = `status-message ${type}`;
 }
 
 function setLoading(isLoading) {
     if (isLoading) {
-        loginBtn.disabled = true;
-        loginBtn.classList.add('loading');
-        btnText.textContent = 'AUTHENTICATING...';
+        verifyBtn.disabled = true;
+        verifyBtn.classList.add('loading');
     } else {
-        loginBtn.disabled = false;
-        loginBtn.classList.remove('loading');
-        btnText.textContent = 'LOGIN';
+        verifyBtn.disabled = false;
+        verifyBtn.classList.remove('loading');
     }
 }
 
@@ -35,29 +28,45 @@ async function hashString(str) {
 }
 
 async function getHardwareId() {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl');
-    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-    
-    const fingerprint = `${navigator.userAgent}-${renderer}-${vendor}-${screen.width}x${screen.height}`;
-    return await hashString(fingerprint);
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl');
+        if (!gl) {
+            return await hashString(navigator.userAgent + screen.width + screen.height);
+        }
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (!debugInfo) {
+            return await hashString(navigator.userAgent + screen.width + screen.height);
+        }
+        const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+        const fingerprint = `${navigator.userAgent}-${renderer}-${vendor}-${screen.width}x${screen.height}`;
+        return await hashString(fingerprint);
+    } catch (e) {
+        return await hashString(navigator.userAgent + screen.width + screen.height);
+    }
+}
+
+if (localStorage.getItem('rememberKey') === 'true') {
+    const savedKey = localStorage.getItem('licenseKey');
+    if (savedKey) {
+        licenseKeyInput.value = savedKey;
+        rememberKeyCheckbox.checked = true;
+    }
 }
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const username = usernameInput.value.trim();
     const licenseKey = licenseKeyInput.value.trim();
     
-    if (!username || !licenseKey) {
-        showMessage('Please fill in all fields', 'error');
+    if (!licenseKey) {
+        showStatus('PLEASE ENTER LICENSE KEY', 'error');
         return;
     }
     
     setLoading(true);
-    messageBox.classList.remove('show');
+    showStatus('VERIFYING KEY...', 'info');
     
     try {
         const encryptedKey = await hashString(licenseKey);
@@ -69,7 +78,7 @@ form.addEventListener('submit', async (e) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                username: username,
+                username: 'user',
                 key: encryptedKey,
                 hwid: hwid,
                 app_version: '1.0.0'
@@ -79,26 +88,41 @@ form.addEventListener('submit', async (e) => {
         const data = await response.json();
         
         if (data.success) {
-            showMessage(data.message || 'Login successful!', 'success');
+            showStatus('LOGIN SUCCESSFUL!', 'success');
+            
+            if (rememberKeyCheckbox.checked) {
+                localStorage.setItem('rememberKey', 'true');
+                localStorage.setItem('licenseKey', licenseKey);
+            } else {
+                localStorage.removeItem('rememberKey');
+                localStorage.removeItem('licenseKey');
+            }
             
             setTimeout(() => {
                 window.location.href = '/dashboard';
             }, 1500);
         } else {
-            showMessage(data.message || 'Login failed', 'error');
+            showStatus(data.message?.toUpperCase() || 'USER OR GAME NOT REGISTERED', 'error');
         }
     } catch (error) {
         console.error('Login error:', error);
-        showMessage('Unable to connect to server. Please check your API configuration.', 'error');
+        showStatus('CONNECTION FAILED - CHECK API', 'error');
     } finally {
         setLoading(false);
     }
 });
 
-usernameInput.addEventListener('input', () => {
-    messageBox.classList.remove('show');
+licenseKeyInput.addEventListener('input', () => {
+    if (licenseKeyInput.value.trim()) {
+        showStatus('READY TO VERIFY', 'info');
+    } else {
+        showStatus('USER OR GAME NOT REGISTERED', 'error');
+    }
 });
 
-licenseKeyInput.addEventListener('input', () => {
-    messageBox.classList.remove('show');
+rememberKeyCheckbox.addEventListener('change', () => {
+    if (!rememberKeyCheckbox.checked) {
+        localStorage.removeItem('rememberKey');
+        localStorage.removeItem('licenseKey');
+    }
 });
