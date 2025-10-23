@@ -4,6 +4,12 @@ project(BR_MODS_EXTERNAL)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(ENABLE_INTEGRITY_CHECK "Enable binary integrity verification" OFF)
+
+if(ENABLE_INTEGRITY_CHECK)
+    add_definitions(-DENABLE_INTEGRITY_CHECK)
+endif()
+
 find_package(OpenGL REQUIRED)
 find_package(GLFW3 REQUIRED)
 find_package(CURL REQUIRED)

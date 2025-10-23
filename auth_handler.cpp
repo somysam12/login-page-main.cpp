@@ -4,6 +4,8 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
+#include <vector>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 
@@ -83,8 +85,38 @@ std::string AuthHandler::EncryptKey(const std::string& key) {
 }
 
 bool AuthHandler::VerifyIntegrity() {
-    static const char* expectedChecksum = "BR_MODS_INTEGRITY_CHECK";
+    #ifdef ENABLE_INTEGRITY_CHECK
+    
+    std::ifstream exe(
+        #ifdef _WIN32
+        "BR_MODS_EXTERNAL.exe"
+        #else
+        "/proc/self/exe"
+        #endif
+    , std::ios::binary);
+    
+    if (!exe.is_open()) {
+        return false;
+    }
+    
+    std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(exe), {});
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256(buffer.data(), buffer.size(), hash);
+    
+    std::stringstream checksumStream;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        checksumStream << std::hex << std::setw(2) << std::setfill('0') 
+                      << static_cast<int>(hash[i]);
+    }
+    
+    std::string calculatedChecksum = checksumStream.str();
+    std::string expectedChecksum = EXPECTED_BINARY_CHECKSUM;
+    
+    return calculatedChecksum == expectedChecksum;
+    
+    #else
     return true;
+    #endif
 }
 
 AuthResult AuthHandler::ValidateKey(const std::string& username, const std::string& key) {
@@ -127,6 +159,7 @@ AuthResult AuthHandler::ValidateKey(const std::string& username, const std::stri
             
             if (responseData.contains("session_token")) {
                 currentSessionToken = responseData["session_token"].get<std::string>();
+                result.sessionToken = currentSessionToken;
             }
             
             if (responseData.contains("expires_at")) {

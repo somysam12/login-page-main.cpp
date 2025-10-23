@@ -6,6 +6,8 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <mutex>
+#include <atomic>
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 500;
@@ -14,11 +16,12 @@ class LoginUI {
 private:
     char username[256] = "";
     char key[256] = "";
-    bool loginInProgress = false;
+    std::atomic<bool> loginInProgress{false};
     std::string errorMessage = "";
     std::string statusMessage = "";
     AuthHandler authHandler;
-    bool isLoggedIn = false;
+    std::atomic<bool> isLoggedIn{false};
+    std::mutex messageMutex;
 
 public:
     LoginUI() : authHandler() {}
@@ -85,13 +88,13 @@ public:
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.8f, 0.8f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 0.0f, 0.0f, 1.0f));
         
-        bool loginDisabled = loginInProgress || strlen(username) == 0 || strlen(key) == 0;
+        bool loginDisabled = loginInProgress.load() || strlen(username) == 0 || strlen(key) == 0;
         
         if (loginDisabled) {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
         }
         
-        if (ImGui::Button(loginInProgress ? "Logging in..." : "Login", ImVec2(buttonWidth, buttonHeight)) && !loginDisabled) {
+        if (ImGui::Button(loginInProgress.load() ? "Logging in..." : "Login", ImVec2(buttonWidth, buttonHeight)) && !loginDisabled) {
             PerformLogin();
         }
         
@@ -101,48 +104,55 @@ public:
         
         ImGui::PopStyleColor(4);
         
-        if (!errorMessage.empty()) {
-            ImGui::SetCursorPosY(340);
-            float msgWidth = ImGui::CalcTextSize(errorMessage.c_str()).x;
-            ImGui::SetCursorPosX(centerX - msgWidth * 0.5f);
+        {
+            std::lock_guard<std::mutex> lock(messageMutex);
+            if (!errorMessage.empty()) {
+                ImGui::SetCursorPosY(340);
+                float msgWidth = ImGui::CalcTextSize(errorMessage.c_str()).x;
+                ImGui::SetCursorPosX(centerX - msgWidth * 0.5f);
+                
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.3f, 0.1f, 0.1f, 0.8f));
+                
+                ImGui::BeginChild("ErrorBox", ImVec2(msgWidth + 40, 50), true);
+                ImGui::SetCursorPosY(15);
+                ImGui::SetCursorPosX(20);
+                ImGui::Text("%s", errorMessage.c_str());
+                ImGui::EndChild();
+                
+                ImGui::PopStyleColor(2);
+            }
             
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.3f, 0.3f, 1.0f));
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.3f, 0.1f, 0.1f, 0.8f));
-            
-            ImGui::BeginChild("ErrorBox", ImVec2(msgWidth + 40, 50), true);
-            ImGui::SetCursorPosY(15);
-            ImGui::SetCursorPosX(20);
-            ImGui::Text("%s", errorMessage.c_str());
-            ImGui::EndChild();
-            
-            ImGui::PopStyleColor(2);
-        }
-        
-        if (!statusMessage.empty()) {
-            ImGui::SetCursorPosY(340);
-            float msgWidth = ImGui::CalcTextSize(statusMessage.c_str()).x;
-            ImGui::SetCursorPosX(centerX - msgWidth * 0.5f);
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
-            ImGui::Text("%s", statusMessage.c_str());
-            ImGui::PopStyleColor();
+            if (!statusMessage.empty()) {
+                ImGui::SetCursorPosY(340);
+                float msgWidth = ImGui::CalcTextSize(statusMessage.c_str()).x;
+                ImGui::SetCursorPosX(centerX - msgWidth * 0.5f);
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+                ImGui::Text("%s", statusMessage.c_str());
+                ImGui::PopStyleColor();
+            }
         }
 
         ImGui::End();
     }
 
     void PerformLogin() {
-        loginInProgress = true;
-        errorMessage = "";
-        statusMessage = "Validating...";
+        loginInProgress.store(true);
+        {
+            std::lock_guard<std::mutex> lock(messageMutex);
+            errorMessage = "";
+            statusMessage = "Validating...";
+        }
         
         std::thread([this]() {
             AuthResult result = authHandler.ValidateKey(username, key);
             
-            loginInProgress = false;
+            std::lock_guard<std::mutex> lock(messageMutex);
+            loginInProgress.store(false);
             statusMessage = "";
             
             if (result.success) {
-                isLoggedIn = true;
+                isLoggedIn.store(true);
                 errorMessage = "";
                 statusMessage = "Login successful!";
             } else {
@@ -151,7 +161,7 @@ public:
         }).detach();
     }
 
-    bool IsLoggedIn() const { return isLoggedIn; }
+    bool IsLoggedIn() const { return isLoggedIn.load(); }
 };
 
 static void glfw_error_callback(int error, const char* description) {

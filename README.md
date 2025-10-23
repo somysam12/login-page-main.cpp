@@ -216,8 +216,11 @@ End session.
 1. **Key Encryption**: License keys are hashed using SHA-256 before transmission
 2. **Hardware ID**: Unique hardware fingerprint prevents key sharing
 3. **SSL/TLS**: All communications use HTTPS with certificate verification
-4. **Integrity Checks**: Application verifies its own integrity at runtime
+4. **Integrity Checks**: Optional binary integrity verification (see SECURITY.md)
 5. **Session Validation**: Server-side session management prevents bypass
+6. **Thread Safety**: Atomic variables and mutex locks prevent race conditions
+
+For detailed security configuration, see [SECURITY.md](SECURITY.md)
 
 ## Customization
 

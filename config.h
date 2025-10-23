@@ -14,4 +14,8 @@ const std::string API_LOGOUT_ENDPOINT = API_BASE_URL + "/logout";
 
 const long HTTP_TIMEOUT = 30;
 
+#ifdef ENABLE_INTEGRITY_CHECK
+const std::string EXPECTED_BINARY_CHECKSUM = "REPLACE_WITH_YOUR_BINARY_SHA256_HASH";
+#endif
+
 #endif
