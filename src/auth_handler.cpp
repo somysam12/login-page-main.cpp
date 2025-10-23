@@ -89,7 +89,7 @@ bool AuthHandler::VerifyIntegrity() {
     
     std::ifstream exe(
         #ifdef _WIN32
-        "BR_MODS_EXTERNAL.exe"
+        "LoginSys.exe"
         #else
         "/proc/self/exe"
         #endif

@@ -1,0 +1,68 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║                         LOGIN SYS BY @TGSHAITAAN                             ║
+║                                                                               ║
+║                                                                               ║
+║                    ╔═══════════════════════════════════╗                     ║
+║                    ║                                   ║                     ║
+║                    ║         Login Sys                 ║                     ║
+║                    ║         By @Tgshaitaan            ║                     ║
+║                    ║    Secure Authentication System   ║                     ║
+║                    ║                                   ║                     ║
+║                    ║   Username                        ║                     ║
+║                    ║   ┌─────────────────────────────┐ ║                     ║
+║                    ║   │ Enter your username         │ ║                     ║
+║                    ║   └─────────────────────────────┘ ║                     ║
+║                    ║                                   ║                     ║
+║                    ║   License Key                     ║                     ║
+║                    ║   ┌─────────────────────────────┐ ║                     ║
+║                    ║   │ ••••••••••••••••••••        │ ║                     ║
+║                    ║   └─────────────────────────────┘ ║                     ║
+║                    ║                                   ║                     ║
+║                    ║   ┌───────────────────────────┐   ║                     ║
+║                    ║   │         LOGIN             │   ║                     ║
+║                    ║   └───────────────────────────┘   ║                     ║
+║                    ║                                   ║                     ║
+║                    ╚═══════════════════════════════════╝                     ║
+║                                                                               ║
+║  v1.0.0 | Secure Login System                                                ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+NEW UI DESIGN FEATURES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ MODERN DESIGN:
+  • Dark blue-black gradient background (0.08, 0.08, 0.12)
+  • Centered login panel with rounded corners (12px radius)
+  • Glass-morphism effect with subtle borders
+  • Larger window size (900x600)
+
+🎨 COLOR SCHEME:
+  • Title: Light blue (#66CCFF)
+  • Subtitle: Light gray (#B3B3BF)
+  • Input backgrounds: Dark gray (#2E2E38)
+  • Button: Bright blue (#4D99FF) with smooth hover effects
+  • Error messages: Soft red with translucent background
+
+📝 INPUT FIELDS:
+  • Labeled inputs (Username, License Key)
+  • Larger padding for better readability (15px horizontal, 12px vertical)
+  • Smooth hover and focus transitions
+  • Password masking for license key
+
+🔘 BUTTON:
+  • Large, prominent LOGIN button (360x45)
+  • Changes to "AUTHENTICATING..." during login
+  • Disabled state when fields are empty
+  • 8px rounded corners
+
+💬 MESSAGES:
+  • Error messages in rounded boxes with red glow
+  • Success messages in bright green
+  • Version info in bottom-left corner
+
+⚡ ANIMATIONS:
+  • Smooth color transitions on hover
+  • Visual feedback on all interactions
+  • Professional loading state

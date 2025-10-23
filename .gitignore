@@ -28,8 +28,8 @@ out/
 *.exe
 *.out
 *.app
-BR_MODS_EXTERNAL
-BR_MODS_EXTERNAL.exe
+LoginSys
+LoginSys.exe
 
 # CMake
 CMakeCache.txt

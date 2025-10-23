@@ -4,7 +4,7 @@
 #include <string>
 
 const std::string APP_VERSION = "1.0.0";
-const std::string APP_NAME = "BR MODS EXTERNAL";
+const std::string APP_NAME = "Login Sys By @Tgshaitaan";
 
 const std::string API_BASE_URL = "https://your-website.com/api";
 
