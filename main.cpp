@@ -22,9 +22,18 @@ private:
     AuthHandler authHandler;
     std::atomic<bool> isLoggedIn{false};
     std::mutex messageMutex;
+    std::thread loginThread;
+    std::atomic<bool> shutdownRequested{false};
 
 public:
     LoginUI() : authHandler() {}
+    
+    ~LoginUI() {
+        shutdownRequested.store(true);
+        if (loginThread.joinable()) {
+            loginThread.join();
+        }
+    }
 
     void Render() {
         ImGuiIO& io = ImGui::GetIO();
@@ -137,6 +146,10 @@ public:
     }
 
     void PerformLogin() {
+        if (loginThread.joinable()) {
+            loginThread.join();
+        }
+        
         loginInProgress.store(true);
         {
             std::lock_guard<std::mutex> lock(messageMutex);
@@ -144,21 +157,23 @@ public:
             statusMessage = "Validating...";
         }
         
-        std::thread([this]() {
+        loginThread = std::thread([this]() {
             AuthResult result = authHandler.ValidateKey(username, key);
             
-            std::lock_guard<std::mutex> lock(messageMutex);
-            loginInProgress.store(false);
-            statusMessage = "";
-            
-            if (result.success) {
-                isLoggedIn.store(true);
-                errorMessage = "";
-                statusMessage = "Login successful!";
-            } else {
-                errorMessage = result.message;
+            if (!shutdownRequested.load()) {
+                std::lock_guard<std::mutex> lock(messageMutex);
+                loginInProgress.store(false);
+                statusMessage = "";
+                
+                if (result.success) {
+                    isLoggedIn.store(true);
+                    errorMessage = "";
+                    statusMessage = "Login successful!";
+                } else {
+                    errorMessage = result.message;
+                }
             }
-        }).detach();
+        });
     }
 
     bool IsLoggedIn() const { return isLoggedIn.load(); }
