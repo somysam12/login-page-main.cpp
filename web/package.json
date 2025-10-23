@@ -1,0 +1,16 @@
+{
+  "name": "login-sys-web",
+  "version": "1.0.0",
+  "description": "Login Sys By @Tgshaitaan - Web Version",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["login", "authentication", "security"],
+  "author": "@Tgshaitaan",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
